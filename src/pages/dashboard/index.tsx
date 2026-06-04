@@ -165,6 +165,9 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ profile, user, loading, children }: DashboardLayoutProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
@@ -173,14 +176,11 @@ export function DashboardLayout({ profile, user, loading, children }: DashboardL
     );
   }
 
-  const router = useRouter();
-
   if (!user) {
     router.push("/auth");
     return null;
   }
 
-  const pathname = usePathname();
   const isAdmin = user?.role === 'admin';
   const firstName = user?.fullName ? user.fullName.split(" ")[0] : (isAdmin ? "Admin" : "Student");
   const initial = user?.fullName ? user.fullName.charAt(0).toUpperCase() : "U";

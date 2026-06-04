@@ -998,9 +998,18 @@ const StudentIDCard = ({ student, profile, forceFlip, previewMode = false }: Stu
             <Button
               variant="outline"
               size="sm"
+              onClick={() => window.print()}
+              className="hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 print-hidden-btn"
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Print
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => downloadPDF(frontRef, `StudentID-${student.studentId}-Front.pdf`)}
               disabled={isDownloading}
-              className="hover:bg-green-50 hover:border-green-300 hover:text-green-700"
+              className="hover:bg-green-50 hover:border-green-300 hover:text-green-700 print-hidden-btn"
             >
               <Download className="w-4 h-4 mr-2" />
               Front
@@ -1010,7 +1019,7 @@ const StudentIDCard = ({ student, profile, forceFlip, previewMode = false }: Stu
               size="sm"
               onClick={() => downloadPDF(backRef, `StudentID-${student.studentId}-Back.pdf`)}
               disabled={isDownloading}
-              className="hover:bg-green-50 hover:border-green-300 hover:text-green-700"
+              className="hover:bg-green-50 hover:border-green-300 hover:text-green-700 print-hidden-btn"
             >
               <Download className="w-4 h-4 mr-2" />
               Back
@@ -1019,8 +1028,32 @@ const StudentIDCard = ({ student, profile, forceFlip, previewMode = false }: Stu
         </div>
       )}
 
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #print-area, #print-area * {
+            visibility: visible;
+          }
+          #print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+          }
+          .print-hidden-btn {
+            display: none !important;
+          }
+        }
+      `}} />
+
       {/* Card Container */}
-      <div
+      <div id="print-area"
         className={`relative mx-auto aspect-[1.586/1] w-[442px] cursor-pointer [perspective:1000px] ${previewMode ? 'origin-center scale-[0.85]' : ''}`}
         onClick={() => {
           if (forceFlip === undefined) setFlipped((f) => !f);

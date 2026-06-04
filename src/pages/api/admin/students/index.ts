@@ -6,9 +6,21 @@ try {
      if (req.method === "GET") {    const { id } = req.query;
 
     const { db } = await connectDB();
-    const result = await db.collection("students").find().toArray();
+    const users = await db.collection("users").find().toArray();
+    const profiles = await db.collection("profiles").find().toArray();
 
-    return res.status(200).json(result)
+    const result = users.map(u => {
+      const p = profiles.find(p => p.userId === u._id.toString() || p.userId === u._id) || ({} as any);
+      return {
+        ...p,
+        email: u.email,
+        role: u.role,
+        userId: u._id.toString(),
+        createdAt: u.createdAt || p.createdAt
+      };
+    });
+
+    return res.status(200).json(result);
 }
 } catch (error) {
     console.log(error)

@@ -34,18 +34,21 @@
 
 import StudentIDCard from '@/src/components/StudentIdCard';
 import * as React from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/src/state/store';
+import { setAuth } from '@/src/state/authSlice';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/src/pages/dashboard';
-import { CreditCard, Clock, AlertTriangle } from 'lucide-react';
+import { CreditCard, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import * as profileActions from '@/src/Actions/profileActions';
 
 const StudentID = () => {
     const router = useRouter();
+    const dispatch = useDispatch();
     const { user, profile, loading } = useSelector((state: RootState) => state.auth);
+    const [isApplying, setIsApplying] = useState(false);
 
     useEffect(() => {
         if (!loading && user?.role === "admin") {
@@ -137,8 +140,15 @@ const StudentID = () => {
 
     if (verificationStatus === 'unapplied') {
         const handleApply = async () => {
-            await profileActions.updateProfile({ user_id: user.id, studentId: profile.studentId, study_year: profile.study_year, program: profile.program, full_name: profile.full_name, email: profile.email, bio: profile.bio, verificationStatus: 'pending' } as any);
-            window.location.reload();
+            setIsApplying(true);
+            try {
+                const updatedProfile = await profileActions.updateProfile({ user_id: user.id, studentId: profile.studentId, study_year: profile.study_year, program: profile.program, full_name: profile.full_name, email: profile.email, bio: profile.bio, verificationStatus: 'pending' } as any);
+                dispatch(setAuth({ user, profile: updatedProfile, loading: false, token: localStorage.getItem("auth_token") }));
+            } catch (err) {
+                console.error("Apply error:", err);
+            } finally {
+                setIsApplying(false);
+            }
         };
 
         return (
@@ -164,9 +174,10 @@ const StudentID = () => {
                             </Link>
                             <button
                                 onClick={handleApply}
-                                className="inline-flex items-center justify-center gap-2 bg-[#0052FF] hover:bg-[#0040D0] text-white text-sm font-semibold rounded-lg px-6 py-3 shadow-[0_4px_12px_rgba(0,82,255,0.15)] transition-all duration-200"
+                                disabled={isApplying}
+                                className="inline-flex items-center justify-center gap-2 bg-[#0052FF] hover:bg-[#0040D0] text-white text-sm font-semibold rounded-lg px-6 py-3 shadow-[0_4px_12px_rgba(0,82,255,0.15)] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
-                                <span>Submit Application</span>
+                                <span>{isApplying ? "Submitting..." : "Submit Application"}</span>
                             </button>
                         </div>
                     </div>
@@ -180,15 +191,18 @@ const StudentID = () => {
             <DashboardLayout loading={loading} profile={profile} user={user}>
                 <div className="max-w-xl mx-auto py-10" style={{ fontFamily: "'DM Sans', sans-serif" }}>
                     <div className="bg-white border border-[#EAECF0]/80 rounded-xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)] text-center flex flex-col items-center">
-                        <div className="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 mb-6 shadow-sm">
-                            <Clock className="w-8 h-8" />
+                        <div className="w-16 h-16 rounded-2xl bg-[#E8F8F0] flex items-center justify-center text-[#10B981] mb-6 shadow-sm">
+                            <CheckCircle2 className="w-8 h-8" />
                         </div>
                         <h2 className="text-xl font-bold text-[#111827] mb-2 font-sora" style={{ fontFamily: "'Sora', sans-serif" }}>
-                            Application Pending Approval
+                            Success! Application Submitted
                         </h2>
-                        <p className="text-[#6E7C87] text-[14px] leading-relaxed max-w-md mb-8">
-                            Your profile has been submitted and is currently being reviewed by the administration. You will be notified once your ID card is approved and ready for use.
+                        <p className="text-[#6E7C87] text-[14px] leading-relaxed max-w-md mb-4">
+                            Your profile has been submitted successfully and is currently being reviewed by the administration.
                         </p>
+                        <div className="bg-amber-50 text-amber-800 border border-amber-200 rounded-lg p-4 text-sm max-w-md w-full mx-auto">
+                            <strong>Note:</strong> This process may take up to 7 business days. You will be notified once your ID card is approved and ready for use.
+                        </div>
                     </div>
                 </div>
             </DashboardLayout>
@@ -250,20 +264,24 @@ const StudentID = () => {
 
     return (
         <DashboardLayout loading={loading} profile={profile} user={user}>
-            <div className="max-w-4xl mx-auto py-8">
-                <div className="mb-8">
+            <div className="max-w-4xl mx-auto py-4 md:py-8">
+                <div className="mb-6 md:mb-8">
                     <h1 className="text-2xl font-bold text-[#111827] font-sora" style={{ fontFamily: "'Sora', sans-serif" }}>Your Active ID Card</h1>
                     <p className="text-[#6E7C87] mt-1 text-sm">This is your official digital student identification card.</p>
                 </div>
                 
-                <div className="bg-[#F8FAFC] border border-[#EAECF0] rounded-2xl p-8 flex items-center justify-center min-h-[400px]">
-                    <StudentIDCard student={profile} profile={{
-                        user_id: user.id,
-                        email: user.email
-                    }} />
+                <div className="bg-[#F8FAFC] border border-[#EAECF0] rounded-2xl p-4 md:p-8 flex items-center justify-center min-h-[400px] overflow-hidden">
+                    <div className="w-full overflow-x-auto pb-2 -mb-2">
+                        <div className="min-w-fit mx-auto flex items-center justify-center">
+                            <StudentIDCard student={profile} profile={{
+                                user_id: user.id,
+                                email: user.email
+                            }} />
+                        </div>
+                    </div>
                 </div>
 
-                <div className="mt-8 bg-white border border-[#EAECF0] rounded-xl p-6 shadow-sm">
+                <div className="mt-6 md:mt-8 bg-white border border-[#EAECF0] rounded-xl p-4 md:p-6 shadow-sm">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
                             <h3 className="text-base font-semibold text-[#111827]">Request New Card</h3>

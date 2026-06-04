@@ -155,7 +155,7 @@ type ProfileType = {
 }
 
 
-import { Bell, CreditCard, GraduationCap, User, ShieldCheck, FileText } from "lucide-react";
+import { Bell, CreditCard, GraduationCap, User, ShieldCheck, FileText, AlertTriangle, Clock } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -167,6 +167,24 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ profile, user, loading, children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [unreadCount, setUnreadCount] = React.useState(0);
+
+  React.useEffect(() => {
+    const fetchNotifications = async () => {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+      try {
+        const res = await fetch('/api/notifications', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data?.unreadCount) setUnreadCount(data.unreadCount);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    if (user) fetchNotifications();
+  }, [user]);
 
   if (loading) {
     return (
@@ -272,9 +290,9 @@ export function DashboardLayout({ profile, user, loading, children }: DashboardL
         <AppSidebar />
 
         {/* Content offset to clear the fixed 240px sidebar */}
-        <div className="flex-1 flex flex-col h-screen ml-[240px] transition-all duration-200 relative z-1 overflow-hidden">
+        <div className="flex-1 flex flex-col h-screen md:ml-[240px] ml-0 transition-all duration-200 relative z-1 overflow-hidden pb-[70px] md:pb-0">
           {/* Header */}
-          <header className="flex items-center justify-between px-10 pt-10 pb-6 bg-transparent shrink-0">
+          <header className="flex items-center justify-between px-6 md:px-10 pt-8 md:pt-10 pb-4 md:pb-6 bg-transparent shrink-0">
             {/* Page / Welcome Title */}
             <div>
               <p
@@ -294,9 +312,12 @@ export function DashboardLayout({ profile, user, loading, children }: DashboardL
             {/* Account & Notification */}
             <div className="flex items-center gap-4">
               {/* Notification Bell */}
-              <button className="w-11 h-11 rounded-full bg-white border border-[#EAECF0]/80 flex items-center justify-center cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-200 text-[#6E7C87] hover:text-[#111827]">
+              <Link href="/dashboard/notifications" className="relative w-11 h-11 rounded-full bg-white border border-[#EAECF0]/80 flex items-center justify-center cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-200 text-[#6E7C87] hover:text-[#111827]">
                 <Bell className="w-[18px] h-[18px]" />
-              </button>
+                {unreadCount > 0 && (
+                  <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                )}
+              </Link>
 
               {/* Profile Avatar with Sunset/Purple Gradient */}
               <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-[#7C3AED] via-[#EC4899] to-[#F59E0B] flex items-center justify-center cursor-pointer shadow-[0_4px_12px_rgba(124,58,237,0.15)] hover:scale-105 transition-all duration-200">
@@ -310,7 +331,7 @@ export function DashboardLayout({ profile, user, loading, children }: DashboardL
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto px-10 py-6 bg-transparent">
+          <main className="flex-1 overflow-y-auto px-6 md:px-10 py-6 bg-transparent">
             {children}
           </main>
         </div>
@@ -322,6 +343,7 @@ export function DashboardLayout({ profile, user, loading, children }: DashboardL
 const Dashboard = () => {
   const dispatch = useDispatch();
   const { user, profile, loading } = useSelector((state: RootState) => state.auth);
+  const [adminStats, setAdminStats] = React.useState({ students: 0, applications: 0, valid: 0, activeCards: 0 });
 
   const handleStudentRegister = async (userId: string) => {
     const { error, message } = await studentActions.registerStudent({ userId: user.id });
@@ -330,57 +352,76 @@ const Dashboard = () => {
   };
 
   React.useEffect(() => {
-    if (user?.id) {
+    if (user?.id && user.role !== 'admin') {
       handleStudentRegister(user.id);
     }
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
+
+  React.useEffect(() => {
+    if (user?.role === 'admin') {
+      const fetchStats = async () => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) return;
+        try {
+          const res = await fetch('/api/admin/dashboard-stats', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (data) setAdminStats(data);
+        } catch (err) {
+          console.error(err);
+        }
+      };
+      fetchStats();
+    }
+  }, [user?.role]);
 
   if (user?.role === 'admin') {
     return (
       <DashboardLayout profile={profile} user={user} loading={loading}>
-        <div className="bg-white border border-[#EAECF0]/80 rounded-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#EAECF0]/60 items-center">
+        <div className="bg-white border border-[#EAECF0]/80 rounded-xl p-4 md:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#EAECF0]/60 items-center">
           
           {/* Card 1: Total Students */}
-          <div className="flex items-center gap-4 px-6 py-4 md:py-0 first:pl-0">
+          <div className="flex items-center gap-4 px-4 md:px-6 py-4 md:py-0 md:first:pl-0">
             <div className="w-12 h-12 rounded-full bg-[#EBF3FF] flex items-center justify-center flex-shrink-0 text-[#0052FF] shadow-[0_2px_8px_rgba(0,82,255,0.05)]">
               <User className="w-5.5 h-5.5" />
             </div>
             <div>
               <p className="text-[13px] font-medium text-[#8E9CAE] tracking-wide mb-0.5" style={{ fontFamily: "'DM Sans', sans-serif" }}>Total Students</p>
-              <span className="text-2xl font-bold text-[#111827] tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>0</span>
+              <span className="text-2xl font-bold text-[#111827] tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>{adminStats.students}</span>
             </div>
           </div>
 
           {/* Card 2: Applications */}
-          <div className="flex items-center gap-4 px-6 py-4 md:py-0">
+          <div className="flex items-center gap-4 px-4 md:px-6 py-4 md:py-0">
             <div className="w-12 h-12 rounded-full bg-[#FFF4ED] flex items-center justify-center flex-shrink-0 text-[#EA580C] shadow-[0_2px_8px_rgba(234,88,12,0.05)]">
               <FileText className="w-5.5 h-5.5" />
             </div>
             <div>
               <p className="text-[13px] font-medium text-[#8E9CAE] tracking-wide mb-0.5" style={{ fontFamily: "'DM Sans', sans-serif" }}>Applications</p>
-              <span className="text-2xl font-bold text-[#111827] tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>0</span>
+              <span className="text-2xl font-bold text-[#111827] tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>{adminStats.applications}</span>
             </div>
           </div>
 
           {/* Card 3: Valid Accounts */}
-          <div className="flex items-center gap-4 px-6 py-4 md:py-0">
+          <div className="flex items-center gap-4 px-4 md:px-6 py-4 md:py-0">
             <div className="w-12 h-12 rounded-full bg-[#E8F8F0] flex items-center justify-center flex-shrink-0 text-[#10B981] shadow-[0_2px_8px_rgba(16,185,129,0.05)]">
               <ShieldCheck className="w-5.5 h-5.5" />
             </div>
             <div>
               <p className="text-[13px] font-medium text-[#8E9CAE] tracking-wide mb-0.5" style={{ fontFamily: "'DM Sans', sans-serif" }}>Valid Accounts</p>
-              <span className="text-2xl font-bold text-[#111827] tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>0</span>
+              <span className="text-2xl font-bold text-[#111827] tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>{adminStats.valid}</span>
             </div>
           </div>
 
           {/* Card 4: Active ID Cards */}
-          <div className="flex items-center gap-4 px-6 py-4 md:py-0 last:pr-0">
+          <div className="flex items-center gap-4 px-4 md:px-6 py-4 md:py-0 md:last:pr-0">
             <div className="w-12 h-12 rounded-full bg-[#E6F7F7] flex items-center justify-center flex-shrink-0 text-[#00B4D8] shadow-[0_2px_8px_rgba(0,180,216,0.05)]">
               <CreditCard className="w-5.5 h-5.5" />
             </div>
             <div>
               <p className="text-[13px] font-medium text-[#8E9CAE] tracking-wide mb-0.5" style={{ fontFamily: "'DM Sans', sans-serif" }}>Active ID Cards</p>
-              <span className="text-2xl font-bold text-[#111827] tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>0</span>
+              <span className="text-2xl font-bold text-[#111827] tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>{adminStats.activeCards}</span>
             </div>
           </div>
 
@@ -403,14 +444,41 @@ const Dashboard = () => {
   ];
   const filledFields = fields.filter(Boolean).length;
   const profileCompletion = Math.round((filledFields / fields.length) * 100) || 0;
-  const verificationStatus = isIdActive ? "Successful" : "Processing";
+  
+  const dbVerificationStatus = (profile as any)?.verificationStatus || 'unapplied';
+  let displayStatus = 'Not Applied';
+  let VerificationIcon = AlertTriangle;
+  let iconColor = 'text-amber-500';
+  let iconBg = 'bg-amber-50 shadow-[0_2px_8px_rgba(245,158,11,0.05)]';
+
+  if (dbVerificationStatus === 'unapplied') {
+    displayStatus = 'Not Applied';
+    VerificationIcon = AlertTriangle;
+    iconColor = 'text-amber-500';
+    iconBg = 'bg-amber-50 shadow-[0_2px_8px_rgba(245,158,11,0.05)]';
+  } else if (dbVerificationStatus === 'pending') {
+    displayStatus = 'Processing';
+    VerificationIcon = Clock;
+    iconColor = 'text-[#00B4D8]';
+    iconBg = 'bg-[#E6F7F7] shadow-[0_2px_8px_rgba(0,180,216,0.05)]';
+  } else if (dbVerificationStatus === 'approved') {
+    displayStatus = 'Successful';
+    VerificationIcon = ShieldCheck;
+    iconColor = 'text-[#10B981]';
+    iconBg = 'bg-[#E8F8F0] shadow-[0_2px_8px_rgba(16,185,129,0.05)]';
+  } else if (dbVerificationStatus === 'rejected') {
+    displayStatus = 'Rejected';
+    VerificationIcon = AlertTriangle;
+    iconColor = 'text-red-500';
+    iconBg = 'bg-red-50 shadow-[0_2px_8px_rgba(239,68,68,0.05)]';
+  }
 
   // Student dashboard: 4 clean cards in a single row panel matching the reference image layout
   return (
     <DashboardLayout profile={profile} user={user} loading={loading}>
-      <div className="bg-white border border-[#EAECF0]/80 rounded-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#EAECF0]/60 items-center">
+      <div className="bg-white border border-[#EAECF0]/80 rounded-xl p-4 md:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#EAECF0]/60 items-center">
         {/* Card 1: ID Status */}
-        <div className="flex items-center gap-4 px-6 py-4 md:py-0 first:pl-0 last:pr-0">
+        <div className="flex items-center gap-4 px-4 md:px-6 py-4 md:py-0 md:first:pl-0 md:last:pr-0">
           <div className="w-12 h-12 rounded-full bg-[#FFEFEF] flex items-center justify-center flex-shrink-0 text-[#FF4D4D] shadow-[0_2px_8px_rgba(255,77,77,0.05)]">
             <CreditCard className="w-5.5 h-5.5" />
           </div>
@@ -421,7 +489,7 @@ const Dashboard = () => {
         </div>
 
         {/* Card 2: Level */}
-        <div className="flex items-center gap-4 px-6 py-4 md:py-0">
+        <div className="flex items-center gap-4 px-4 md:px-6 py-4 md:py-0">
           <div className="w-12 h-12 rounded-full bg-[#E8F8F0] flex items-center justify-center flex-shrink-0 text-[#10B981] shadow-[0_2px_8px_rgba(16,185,129,0.05)]">
             <GraduationCap className="w-5.5 h-5.5" />
           </div>
@@ -432,7 +500,7 @@ const Dashboard = () => {
         </div>
 
         {/* Card 3: Profile Completion */}
-        <div className="flex items-center gap-4 px-6 py-4 md:py-0">
+        <div className="flex items-center gap-4 px-4 md:px-6 py-4 md:py-0">
           <div className="w-12 h-12 rounded-full bg-[#EBF3FF] flex items-center justify-center flex-shrink-0 text-[#0052FF] shadow-[0_2px_8px_rgba(0,82,255,0.05)]">
             <User className="w-5.5 h-5.5" />
           </div>
@@ -443,13 +511,13 @@ const Dashboard = () => {
         </div>
 
         {/* Card 4: Verification */}
-        <div className="flex items-center gap-4 px-6 py-4 md:py-0 last:pr-0">
-          <div className="w-12 h-12 rounded-full bg-[#E6F7F7] flex items-center justify-center flex-shrink-0 text-[#00B4D8] shadow-[0_2px_8px_rgba(0,180,216,0.05)]">
-            <ShieldCheck className="w-5.5 h-5.5" />
+        <div className="flex items-center gap-4 px-4 md:px-6 py-4 md:py-0 md:last:pr-0">
+          <div className={`w-12 h-12 rounded-full ${iconBg} flex items-center justify-center flex-shrink-0 ${iconColor}`}>
+            <VerificationIcon className="w-5.5 h-5.5" />
           </div>
           <div>
             <p className="text-[13px] font-medium text-[#8E9CAE] tracking-wide mb-0.5" style={{ fontFamily: "'DM Sans', sans-serif" }}>Verification</p>
-            <span className="text-2xl font-bold text-[#111827] tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>{verificationStatus}</span>
+            <span className="text-2xl font-bold text-[#111827] tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>{displayStatus}</span>
           </div>
         </div>
       </div>

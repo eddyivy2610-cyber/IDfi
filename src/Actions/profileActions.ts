@@ -96,10 +96,13 @@ export const updateProfile = async (profileData: {
   // Profile actions for fetching user profile data
 export const fetchProfile = async (userId: string) => {
   try {
-    const response = await fetchWithAuth(`/api/users/${userId}/profile`, {
+    const response = await fetchWithAuth(`/api/users/${userId}/profile?_t=${Date.now()}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
       },
     })
 

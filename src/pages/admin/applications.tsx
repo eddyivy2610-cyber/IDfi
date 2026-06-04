@@ -47,31 +47,13 @@ export default function ApplicationsPage() {
       // Applications = Profile complete but verificationStatus is 'pending' or missing/falsy
       const studentsData = await studentActions.getAllStudents();
       
-      const pendingApps = studentsData.filter(s => {
+      const pendingApps = (studentsData as any[]).filter((s: any) => {
         const isComplete = s.full_name && s.studentId && s.program; // Add other validation requirements as needed
         const isPending = !s.verificationStatus || s.verificationStatus === 'pending';
         return isComplete && isPending && !s.isVerified;
       });
 
-      // Add a mock application for testing if empty
-      if (pendingApps.length === 0) {
-        pendingApps.push({
-          _id: "mock-app-1",
-          userId: "mock-user-app-1",
-          full_name: "John Smith",
-          email: "john.smith@university.edu",
-          program: "Cyber Security",
-          study_year: 2,
-          sex: "M",
-          studentId: "CYB10293",
-          stateOfOrigin: "Abuja",
-          dob: "2004-11-22",
-          phone: "08123456789",
-          verificationStatus: "pending",
-          isVerified: false,
-          createdAt: new Date().toISOString()
-        });
-      }
+
 
       setApplications(pendingApps);
     } catch (err: any) {
@@ -81,11 +63,11 @@ export default function ApplicationsPage() {
     }
   };
 
-  const handleBulkAction = async (action: 'approve' | 'reject') => {
-    if (selectedRows.size === 0) return;
+  const handleBulkAction = async (action: 'approve' | 'reject', explicitIds?: string[]) => {
+    const userIds = explicitIds || Array.from(selectedRows);
+    if (userIds.length === 0) return;
     
     setProcessing(true);
-    const userIds = Array.from(selectedRows);
     
     try {
       await studentActions.bulkActionApplications(userIds, action);
@@ -361,14 +343,14 @@ export default function ApplicationsPage() {
                          <Button 
                            variant="outline" 
                            className="flex-1 text-[#DC2626] border-[#FECACA] hover:bg-[#FEF2F2] hover:text-[#DC2626]"
-                           onClick={() => handleBulkAction('reject')}
+                           onClick={() => handleBulkAction('reject', [selectedStudent.userId || selectedStudent._id])}
                            disabled={processing}
                          >
                            Reject
                          </Button>
                          <Button 
                            className="flex-1 bg-[#16A34A] hover:bg-[#15803D] text-white"
-                           onClick={() => handleBulkAction('approve')}
+                           onClick={() => handleBulkAction('approve', [selectedStudent.userId || selectedStudent._id])}
                            disabled={processing}
                          >
                            Approve
@@ -466,14 +448,14 @@ export default function ApplicationsPage() {
                       <Button 
                         variant="outline" 
                         className="flex-1 text-[#DC2626] border-[#FECACA] hover:bg-[#FEF2F2] hover:text-[#DC2626]"
-                        onClick={() => handleBulkAction('reject')}
+                        onClick={() => handleBulkAction('reject', [selectedStudent.userId || selectedStudent._id])}
                         disabled={processing}
                       >
                         Reject
                       </Button>
                       <Button 
                         className="flex-1 bg-[#16A34A] hover:bg-[#15803D] text-white"
-                        onClick={() => handleBulkAction('approve')}
+                        onClick={() => handleBulkAction('approve', [selectedStudent.userId || selectedStudent._id])}
                         disabled={processing}
                       >
                         Approve

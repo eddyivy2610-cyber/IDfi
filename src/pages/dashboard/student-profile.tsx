@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/src/state/store";
 import { logOut, setAuth } from "@/src/state/authSlice";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const NIGERIAN_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno",
@@ -199,7 +200,9 @@ const StudentProfile = () => {
       setKinPhone(profile.kinPhone || "");
       setPhone(profile.phone || "");
       
-      setCurrentStep(2); // Automatically show Step 2 if profile exists
+      // If the user has just saved their profile, don't throw them back into edit mode.
+      // We use step 3 as the "Profile Saved, Update?" landing state.
+      setCurrentStep(3);
     }
   }, [profile]);
 
@@ -468,6 +471,24 @@ const StudentProfile = () => {
                       </div>
                     )}
                   </div>
+                </div>
+              ) : currentStep === 3 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 h-full animate-in fade-in zoom-in duration-500">
+                  <div className="w-20 h-20 rounded-2xl bg-[#10B981]/10 flex items-center justify-center text-[#10B981] shadow-sm mb-2">
+                    <CheckCircle2 className="w-10 h-10" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-[#111827] font-sora" style={{ fontFamily: "'Sora', sans-serif" }}>
+                    Profile Up to Date
+                  </h2>
+                  <p className="text-[#6E7C87] text-[15px] leading-relaxed max-w-sm mx-auto">
+                    Your profile information has been saved successfully. You can now proceed to apply for your ID card, or update your details if needed.
+                  </p>
+                  <Button
+                    onClick={() => setCurrentStep(2)}
+                    className="mt-4 inline-flex items-center justify-center gap-2 bg-[#0052FF] hover:bg-[#0040D0] text-white text-sm font-semibold rounded-lg px-8 py-3.5 shadow-[0_4px_12px_rgba(0,82,255,0.15)] transition-all duration-200 w-full max-w-[280px]"
+                  >
+                    <span>Update Profile</span>
+                  </Button>
                 </div>
               ) : (
                 <form onSubmit={handleSaveProfile} className="space-y-8 animate-in slide-in-from-bottom-4 fade-in duration-500">

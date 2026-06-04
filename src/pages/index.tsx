@@ -39,7 +39,7 @@ const Index = () => {
         </div>
 
         <h1 className="text-5xl md:text-7xl font-bold text-[#111827] font-sora mb-6 leading-tight" style={{ fontFamily: "'Sora', sans-serif" }}>
-          The Future of <br className="hidden md:block" /> <span className="text-[#0052FF]">Student Identity.</span>
+          Smart, Secure<br className="hidden md:block" /> <span className="text-[#0052FF]">Simple</span>
         </h1>
         
         <p className="text-lg text-[#6E7C87] max-w-2xl mx-auto mb-10 leading-relaxed">

@@ -405,6 +405,9 @@ const Auth = () => {
                       required
                       className="h-12 bg-[#F8FAFC] border-[#EAECF0] rounded-xl focus-visible:ring-2 focus-visible:ring-[#0052FF] focus:bg-white transition-all text-[15px]"
                     />
+                    <p className="text-[11px] text-[#6B7280] font-medium italic mt-1">
+                      * Please ensure this exactly matches the name on your admission letter.
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signupEmail" className="text-xs font-bold text-[#6B7280] uppercase tracking-wider">Email Address</Label>

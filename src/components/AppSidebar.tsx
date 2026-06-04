@@ -74,10 +74,11 @@ export function AppSidebar() {
   };
 
   return (
-    <aside
-      className="w-[240px] h-screen bg-transparent flex flex-col fixed inset-y-0 left-0 z-20 select-none"
-      style={{ fontFamily: "'DM Sans', sans-serif" }}
-    >
+    <>
+      <aside
+        className="hidden md:flex w-[240px] h-screen bg-transparent flex-col fixed inset-y-0 left-0 z-20 select-none"
+        style={{ fontFamily: "'DM Sans', sans-serif" }}
+      >
       {/* ── Brand Logo Header ── */}
       <div className="pl-8 pt-8 pb-10 flex items-center gap-3">
         <LogoIcon />
@@ -135,5 +136,32 @@ export function AppSidebar() {
         </button>
       </div>
     </aside>
+      {/* ── Mobile Bottom Navigation ── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[70px] bg-white border-t border-[#EAECF0]/80 z-[100] flex justify-around items-center px-2 pb-safe" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+        {menuItems.map((item) => {
+          const active = isActive(item.url);
+          // Show only main navigation items on mobile to fit nicely (skip settings/help if too many, but let's keep all 5 as they fit in bottom nav)
+          return (
+            <Link
+              key={item.title}
+              href={item.url}
+              className={`flex flex-col items-center justify-center flex-1 h-full space-y-1 transition-colors duration-200 ${
+                active ? "text-[#0052FF]" : "text-[#9BA7B0] hover:text-[#4A5568]"
+              }`}
+            >
+              <div className={`relative flex items-center justify-center p-1.5 rounded-full ${active ? 'bg-[#EBF3FF]' : ''}`}>
+                <item.icon className="w-[22px] h-[22px]" />
+                {!active && item.badge && (
+                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#0052FF] rounded-full border-2 border-white"></span>
+                )}
+              </div>
+              <span className={`text-[10px] font-medium leading-none ${active ? 'text-[#0052FF] font-bold' : ''}`}>
+                {item.title}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
+    </>
   );
 }

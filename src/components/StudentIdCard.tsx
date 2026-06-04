@@ -1034,7 +1034,7 @@ const StudentIDCard = ({ student, profile, forceFlip, previewMode = false }: Stu
           {/* FRONT FACE */}
           <Card ref={frontRef} className="absolute inset-0 h-full w-full rounded-[10px] shadow-md [backface-visibility:hidden] overflow-hidden font-sans border-0">
             {/* Baked-in Figma Background */}
-            <img src={cardFrontBg.src} alt="Card Background" className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none select-none" />
+            <img src={typeof cardFrontBg === 'string' ? cardFrontBg : (cardFrontBg as any)?.src || cardFrontBg} alt="Card Background" className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none select-none" />
 
             <CardContent className="p-0 flex flex-col h-full relative z-10">
               {/* Dynamic Content Overlays */}

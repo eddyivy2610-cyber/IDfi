@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DashboardLayout } from '@/src/pages/dashboard';
+import { DashboardLayout } from '@/src/components/DashboardLayout';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/src/state/store';
 import { Settings, Lock, Eye, EyeOff } from 'lucide-react';

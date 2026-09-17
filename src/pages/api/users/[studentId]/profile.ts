@@ -127,6 +127,11 @@ async function updateProfile(req: NextApiRequest, res: NextApiResponse, db: Db, 
       updatedAt: new Date(),
     };
 
+    // Remove immutable or conflicting id fields to avoid MongoServerError: immutable field _id
+    delete updateData._id;
+    delete updateData.id;
+    delete updateData.user_id;
+
     if (shouldResetCreatedAt) {
       updateData.createdAt = new Date();
     }
@@ -137,7 +142,10 @@ async function updateProfile(req: NextApiRequest, res: NextApiResponse, db: Db, 
       { upsert: true, returnDocument: 'after' }
     );
 
-    const updatedDoc = result?.value ?? null;
+    let updatedDoc = (result && typeof result === 'object' && 'value' in result) ? (result as any).value : result;
+    if (!updatedDoc) {
+      updatedDoc = await profiles.findOne({ userId });
+    }
 
     res.status(200).json({ data: updatedDoc });
   } catch (error: unknown) {

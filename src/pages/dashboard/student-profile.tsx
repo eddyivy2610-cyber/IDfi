@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { DashboardLayout } from "@/src/pages/dashboard";
+import { DashboardLayout } from "@/src/components/DashboardLayout";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";

@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/src/pages/dashboard";
+import { DashboardLayout } from "@/src/components/DashboardLayout";
 import { useSelector } from "react-redux";
 import { RootState } from "@/src/state/store";
 import { EmptyState } from "@/src/components/EmptyState";

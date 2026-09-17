@@ -40,7 +40,7 @@ import { setAuth } from '@/src/state/authSlice';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { DashboardLayout } from '@/src/pages/dashboard';
+import { DashboardLayout } from '@/src/components/DashboardLayout';
 import { CreditCard, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import * as profileActions from '@/src/Actions/profileActions';
 
@@ -55,6 +55,16 @@ const StudentID = () => {
             router.push("/dashboard");
         }
     }, [user, loading, router]);
+
+    useEffect(() => {
+        if (user?.id) {
+            profileActions.fetchProfile(user.id).then((freshProfile) => {
+                if (freshProfile && freshProfile.studentId) {
+                    dispatch(setAuth({ user, profile: freshProfile, loading: false, token: localStorage.getItem("auth_token") || "" }));
+                }
+            });
+        }
+    }, [user?.id, dispatch]);
 
     if (loading) {
         return (
@@ -142,8 +152,12 @@ const StudentID = () => {
         const handleApply = async () => {
             setIsApplying(true);
             try {
-                const updatedProfile = await profileActions.updateProfile({ user_id: user.id, studentId: profile.studentId, study_year: profile.study_year, program: profile.program, full_name: profile.full_name, email: profile.email, bio: profile.bio, verificationStatus: 'pending' } as any);
-                dispatch(setAuth({ user, profile: updatedProfile, loading: false, token: localStorage.getItem("auth_token") }));
+                const updatedProfile = await profileActions.updateProfile({
+                    ...profile,
+                    user_id: user.id,
+                    verificationStatus: 'pending'
+                } as any);
+                dispatch(setAuth({ user, profile: updatedProfile, loading: false, token: localStorage.getItem("auth_token") || "" }));
             } catch (err) {
                 console.error("Apply error:", err);
             } finally {

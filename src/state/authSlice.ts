@@ -83,14 +83,14 @@ type User = {
 }
 
 type Profile = {
-  full_name: string
-  study_year: number
-  studentId: string
-  program: string
+  full_name?: string
+  study_year?: number
+  studentId?: string
+  program?: string
   avatar?: string
-  bio: string
-  email: string
-  userId: string
+  bio?: string
+  email?: string
+  userId?: string
   sex?: string
   dob?: string
   stateOfOrigin?: string
@@ -99,8 +99,9 @@ type Profile = {
   kinAddress?: string
   kinPhone?: string
   phone?: string
-  createdAt?: string
-  updatedAt?: string
+  verificationStatus?: string
+  createdAt?: string | Date
+  updatedAt?: string | Date
 }
 
 export interface AuthState {

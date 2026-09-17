@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { DashboardLayout } from '@/src/pages/dashboard';
+import { DashboardLayout } from '@/src/components/DashboardLayout';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/src/state/store';
 import { Bell, AlertTriangle, CheckCircle, Info } from 'lucide-react';
